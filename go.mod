@@ -1,4 +1,4 @@
-module test2
+module tarrer
 
 go 1.17
 
