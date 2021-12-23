@@ -1,6 +1,6 @@
 # tarrer
 
-dump br, bz2, zip, gz, lz4, sz, xz, zstd extracter
+Dumb br, bz2, zip, gz, lz4, sz, xz, zstd extractor
 
 ## Run
 
