@@ -1,6 +1,6 @@
 # tarrer
 
-extract possibly any archive supported br, bz2, zip, gz, lz4, sz, xz, zstd
+dump br, bz2, zip, gz, lz4, sz, xz, zstd extracter
 
 ## Run
 
