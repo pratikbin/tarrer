@@ -27,10 +27,13 @@ jobs:
         with:
           targets: artifact-all
           push: false
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
 
       - name: Move artifacts
         run: |
-          mv ./dist/**/* ./dist/
+          mv -f ./dist/**/* ./dist/
 
       - name: Release
         uses: softprops/action-gh-release@v1
