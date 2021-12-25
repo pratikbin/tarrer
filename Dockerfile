@@ -26,8 +26,29 @@ RUN --mount=type=bind,source=.,target=/src,rw \
     --snapshot="no" \
     --main="."
 
+FROM vendored AS trim
+ARG TARGETPLATFORM
+RUN xx-apk add --no-cache \
+    gcc \
+    musl-dev
+RUN --mount=type=bind,source=.,target=/src,rw \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/go/pkg/mod \
+  goreleaser-xx --debug \
+    --main="." \
+    --dist="/out" \
+    --snapshot="no" \
+    --artifacts="bin" \
+    --artifacts="archive" \
+    --ldflags="-s -w" \
+    --flags="-trimpath" \
+    --name="tarrer-trim"
+
 FROM vendored AS slim
 ARG TARGETPLATFORM
+RUN xx-apk add --no-cache \
+    gcc \
+    musl-dev
 RUN --mount=type=bind,source=.,target=/src,rw \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
@@ -42,22 +63,7 @@ RUN --mount=type=bind,source=.,target=/src,rw \
     --name="tarrer-slim" \
     --post-hooks="sh -cx 'upx --ultra-brute --best /usr/local/bin/tarrer-slim || true'"
 
-FROM vendored AS trim
-ARG TARGETPLATFORM
-RUN --mount=type=bind,source=.,target=/src,rw \
-  --mount=type=cache,target=/root/.cache \
-  --mount=type=cache,target=/go/pkg/mod \
-  goreleaser-xx --debug \
-    --main="." \
-    --dist="/out" \
-    --snapshot="no" \
-    --artifacts="bin" \
-    --artifacts="archive" \
-    --ldflags="-s -w" \
-    --flags="-trimpath" \
-    --name="tarrer-trim"
-
 FROM scratch AS artifact
 COPY --from=build /out /
-COPY --from=slim /out /
 COPY --from=trim /out /
+COPY --from=slim /out /
