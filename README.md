@@ -6,12 +6,9 @@ Dumb br, bz2, zip, gz, lz4, sz, xz, zstd extractor
 
 `tarrer <archive path> <dest dir path>`
 
-> > tarrer_slim binaries are built with flags `-trimpath -ldflags "-s -w"` and compressed with [UPX](https://github.com/upx/upx) so Windows systems may recognize this as malicious.
-
-
 ## Release
 
-Artifacts/Binaries in releases are available in...
+There are several variant of binaries you can see in releses
 
 - OS/Aarch
   - linux/amd64
@@ -23,6 +20,8 @@ Artifacts/Binaries in releases are available in...
   - linux/ppc64le
   - linux/riscv64
   - linux/s390x
+  - linux/mips64le
+  - linux/mips64
   - windows/amd64
   - windows/arm64
   - windows/386
@@ -32,14 +31,17 @@ Artifacts/Binaries in releases are available in...
 
 - Varient
   - `tarrer_*` binary
-  - `tarrer_slim_*` binary that built with flags `-trimpath -ldflags "-s -w"` and some of them compressed with [UPX](https://github.com/upx/upx) (Windows systems may recognize this as malicious)
-  - `tarrer_slim_*.tar.gz` archived binary
+    - `tarrer_*.tar.gz` archived binary
+  - `tarrer-trim_*` binary that built with   `-trimpath -ldflags "-s -w"`
+    - `tarrer-trim_*.tar.gz` archived binary
+  - `tarrer-slim_*` binary that built with `-trimpath -ldflags "-s -w"` and some of them compressed with [UPX](https://github.com/upx/upx)
+    - `tarrer-slim_*.tar.gz` archived binary
 
 - Checksum
   - `*.sha256` SHA checksum of that binary `*`
   - `*.tar.gz.sha256` SHA checksum of archive `*`
 
-> That makes `122` artifacts in release
+> > tarrer-slim binaries are built with flags `-trimpath -ldflags "-s -w"` and compressed with [UPX](https://github.com/upx/upx) which can lead to unexpected memory behavior or in Windows systems this may recognize as malicious.
 
 ### Thanks to
 

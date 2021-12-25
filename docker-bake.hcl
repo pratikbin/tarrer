@@ -1,10 +1,10 @@
-variable "GORELEASER_XX_BASE" {
-  default = "crazymax/goreleaser-xx:edge"
+variable "UPX_VERSION" {
+  default = "3.96"
 }
 
 target "_commons" {
   args = {
-    GORELEASER_XX_BASE = GORELEASER_XX_BASE
+    UPX_VERSION = UPX_VERSION
   }
 }
 
@@ -14,7 +14,7 @@ group "default" {
 
 target "image" {
   inherits = ["_commons"]
-  tags = ["xx-hello:local"]
+  tags = ["local/tarrer:local"]
 }
 
 target "image-local" {
@@ -26,11 +26,15 @@ target "image-all" {
   inherits = ["image"]
   platforms = [
     "linux/amd64",
-    "linux/arm/v6",
-    "linux/arm/v7",
     "linux/arm64",
+    "linux/riscv64",
     "linux/ppc64le",
-    "linux/s390x"
+    "linux/s390x",
+    "linux/386",
+    "linux/mips64le",
+    "linux/mips64",
+    "linux/arm/v7",
+    "linux/arm/v6",
   ]
 }
 
@@ -52,6 +56,8 @@ target "artifact-all" {
     "linux/ppc64le",
     "linux/riscv64",
     "linux/s390x",
+    "linux/mips64le",
+    "linux/mips64",
     "windows/amd64",
     "windows/arm64",
     "windows/386",
