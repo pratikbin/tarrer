@@ -21,6 +21,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+        with:
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 4
 
       - name: Build and push
         uses: docker/bake-action@master
@@ -32,7 +36,9 @@ jobs:
             *.cache-to=type=gha,mode=max
 
       - name: Move artifacts
+        shell: bash
         run: |
+          find ./dist -name *.json* -type f -exec rm -f {} \;
           mv -f ./dist/**/* ./dist/
 
       - name: Release

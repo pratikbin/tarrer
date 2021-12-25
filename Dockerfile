@@ -1,7 +1,7 @@
 ARG GO_VERSION=1.17
 
-FROM --platform=$BUILDPLATFORM crazymax/goreleaser-xx:edge AS goreleaser-xx
-FROM --platform=$BUILDPLATFORM pratikimprowise/upx AS upx
+FROM --platform=$BUILDPLATFORM crazymax/goreleaser-xx:1.2.2 AS goreleaser-xx
+FROM --platform=$BUILDPLATFORM pratikimprowise/upx:3.96 AS upx
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine AS base
 COPY --from=goreleaser-xx / /
 COPY --from=upx / /
@@ -19,12 +19,13 @@ RUN --mount=type=bind,source=.,target=/src,rw \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
   goreleaser-xx --debug \
-    --name "tarrer" \
-    --dist "/out" \
+    --envs="CGO_ENABLED=0" \
+    --name="tarrer" \
+    --main="." \
+    --dist="/out" \
     --artifacts="bin" \
     --artifacts="archive" \
-    --snapshot="no" \
-    --main="."
+    --snapshot="no"
 
 FROM vendored AS trim
 ARG TARGETPLATFORM
@@ -34,14 +35,15 @@ RUN --mount=type=bind,source=.,target=/src,rw \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
   goreleaser-xx --debug \
-    --main="." \
-    --dist="/out" \
-    --snapshot="no" \
-    --artifacts="bin" \
-    --artifacts="archive" \
+    --envs="CGO_ENABLED=0" \
+    --name="tarrer-trim" \
     --ldflags="-s -w" \
     --flags="-trimpath" \
-    --name="tarrer-trim"
+    --main="." \
+    --dist="/out" \
+    --artifacts="bin" \
+    --artifacts="archive" \
+    --snapshot="no"
 
 FROM vendored AS slim
 ARG TARGETPLATFORM
@@ -51,14 +53,15 @@ RUN --mount=type=bind,source=.,target=/src,rw \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
   goreleaser-xx --debug \
-    --main="." \
-    --dist="/out" \
-    --snapshot="no" \
-    --artifacts="bin" \
-    --artifacts="archive" \
+    --envs="CGO_ENABLED=0" \
+    --name="tarrer-slim" \
     --ldflags="-s -w" \
     --flags="-trimpath" \
-    --name="tarrer-slim" \
+    --main="." \
+    --dist="/out" \
+    --artifacts="bin" \
+    --artifacts="archive" \
+    --snapshot="no" \
     --post-hooks="sh -cx 'upx --ultra-brute --best /usr/local/bin/tarrer-slim || true'"
 
 FROM scratch AS artifact
