@@ -7,7 +7,7 @@ COPY --from=goreleaser-xx / /
 COPY --from=upx / /
 ENV CGO_ENABLED=0
 ENV GO111MODULE=auto
-RUN apk --update add --no-cache git bash gcc musl-dev
+RUN apk --update add --no-cache git
 WORKDIR /src
 
 FROM base AS vendored
