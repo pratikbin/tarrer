@@ -3,7 +3,7 @@ variable "GO_VERSION" {
 }
 
 variable "REPO" {
-  default = "pratikbalar/tarrer"
+  default = "pratikimprowise/tarrer"
 }
 
 variable "VERSION" {
@@ -34,7 +34,7 @@ variable "TAGS_SLIM" {
 
 target "_common" {
   args = {
-    GO_VERSION   = GO_VERSION
+    GO_VERSION = GO_VERSION
   }
 }
 
