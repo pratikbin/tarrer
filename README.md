@@ -10,11 +10,22 @@ Dumb br, bz2, zip, gz, lz4, sz, xz, zstd extractor
 
 ## Docker
 
+### minimal
+
 ```Dockerfile
-FROM docker.io/pratikbalar/tarrer:latest as tarrer
+FROM pratikbalar/tarrer:latest as tarrer
 FROM alpine:latest
 COPY --from=tarrer / /
-RUN tarrer test.tar.xz
+RUN tarrer test.tar.xz ./
+```
+
+### Multiplatform
+
+```Dockerfile
+FROM --platform=$BUILDPLATFORM pratikbalar/tarrer:latest as tarrer
+FROM alpine:latest
+COPY --from=tarrer / /
+RUN tarrer test.tar.xz ./
 ```
 
 ## Release
