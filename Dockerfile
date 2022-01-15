@@ -1,11 +1,13 @@
 ARG GO_VERSION=1.17
 
-FROM --platform=$BUILDPLATFORM crazymax/goreleaser-xx:1.2.2 AS goreleaser-xx
+FROM --platform=$BUILDPLATFORM crazymax/goreleaser-xx:latest AS goreleaser-xx
 FROM --platform=$BUILDPLATFORM pratikimprowise/upx:3.96 AS upx
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine AS base
 COPY --from=goreleaser-xx / /
 COPY --from=upx / /
-RUN apk --update add --no-cache git bash gcc musl-dev
+ENV CGO_ENABLED=0
+ENV GO111MODULE=auto
+RUN apk --update add --no-cache git
 WORKDIR /src
 
 FROM base AS vendored
@@ -13,13 +15,12 @@ RUN --mount=type=bind,target=.,rw \
   --mount=type=cache,target=/go/pkg/mod \
   go mod tidy && go mod download
 
-FROM vendored AS build
+FROM vendored AS bin
 ARG TARGETPLATFORM
 RUN --mount=type=bind,source=.,target=/src,rw \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
   goreleaser-xx --debug \
-    --envs="CGO_ENABLED=0" \
     --name="tarrer" \
     --main="." \
     --dist="/out" \
@@ -27,33 +28,16 @@ RUN --mount=type=bind,source=.,target=/src,rw \
     --artifacts="archive" \
     --snapshot="no"
 
-FROM vendored AS trim
-ARG TARGETPLATFORM
-# XX_CC_PREFER_STATIC_LINKER prefers ld to lld in ppc64le and 386.
-ENV XX_CC_PREFER_STATIC_LINKER=1
-RUN --mount=type=bind,source=.,target=/src,rw \
-  --mount=type=cache,target=/root/.cache \
-  --mount=type=cache,target=/go/pkg/mod \
-  goreleaser-xx --debug \
-    --envs="CGO_ENABLED=0" \
-    --name="tarrer-trim" \
-    --ldflags="-s -w" \
-    --flags="-trimpath" \
-    --main="." \
-    --dist="/out" \
-    --artifacts="bin" \
-    --artifacts="archive" \
-    --snapshot="no"
+FROM scratch as fat
+COPY --from=bin /usr/local/bin/tarrer /usr/local/bin/tarrer
+ENTRYPOINT ["/usr/local/bin/tarrer"]
 
-FROM vendored AS slim
+FROM vendored AS bin-slim
 ARG TARGETPLATFORM
-# XX_CC_PREFER_STATIC_LINKER prefers ld to lld in ppc64le and 386.
-ENV XX_CC_PREFER_STATIC_LINKER=1
 RUN --mount=type=bind,source=.,target=/src,rw \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
   goreleaser-xx --debug \
-    --envs="CGO_ENABLED=0" \
     --name="tarrer-slim" \
     --ldflags="-s -w" \
     --flags="-trimpath" \
@@ -62,9 +46,26 @@ RUN --mount=type=bind,source=.,target=/src,rw \
     --artifacts="bin" \
     --artifacts="archive" \
     --snapshot="no" \
-    --post-hooks="sh -cx 'upx --ultra-brute --best /usr/local/bin/tarrer-slim || true'"
+    --post-hooks="sh -c 'upx -v --ultra-brute --best -o /usr/local/bin/{{ .ProjectName }}{{ .Ext }} || true' "
 
+FROM scratch as slim
+COPY --from=bin-slim /usr/local/bin/tarrer-slim /usr/local/bin/tarrer
+ENTRYPOINT ["/usr/local/bin/tarrer"]
+
+## get binary out
+### non slim binary
 FROM scratch AS artifact
-COPY --from=build /out /
-COPY --from=trim /out /
-COPY --from=slim /out /
+COPY --from=bin /out /
+###
+
+### slim binary
+FROM scratch AS artifact-slim
+COPY --from=bin-slim /out /
+###
+
+### All binaries
+FROM scratch AS artifact-all
+COPY --from=bin /out /
+COPY --from=bin-slim /out /
+###
+##
