@@ -31,6 +31,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
+          tree ./dist
           find ./dist -name *.json* -type f -exec rm -f {} \;
           mv -f ./dist/**/* ./dist/
 
