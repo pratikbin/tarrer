@@ -1,0 +1,64 @@
+name: release
+
+on:
+  push:
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: docker/setup-qemu-action@v1
+
+      - uses: docker/setup-buildx-action@v1
+        with:
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 4
+
+      - uses: docker/bake-action@master
+        with:
+          targets: artifact-all
+          push: false
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+
+      - name: Move artifacts
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          find ./dist -name *.json* -type f -exec rm -f {} \;
+          mv -f ./dist/**/* ./dist/
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set outputs
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo ::set-output name=version::$(cat ${GITHUB_EVENT_PATH} | jq -r '.release.tag_name')
+          echo ::set-output name=sha_short::${GITHUB_SHA::7}
+
+      - uses: docker/bake-action@master
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.vars.outputs.version }}
+          GIT_SHA: ${{ steps.vars.outputs.sha_short }}
+        with:
+          targets: |
+            image-all
+            image-slim-all
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
