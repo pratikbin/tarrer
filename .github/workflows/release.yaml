@@ -28,7 +28,6 @@ jobs:
             *.cache-to=type=gha,mode=max
 
       - name: Move artifacts
-        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           tree ./dist
