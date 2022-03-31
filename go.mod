@@ -1,4 +1,4 @@
-module tarrer
+module github.com/pratikbin/tarrer
 
 go 1.17
 
